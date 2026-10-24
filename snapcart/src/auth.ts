@@ -41,17 +41,22 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         // token ke aander user ka data dalta hai
         async signIn({user, account}) {
             if (account?.provider == "google") {
-                await connectDB()
-                let dbUser = await User.findOne({email:user.email})
-                if (!dbUser) {
-                    dbUser = await User.create({
-                        name:user.name,
-                        email:user.email,
-                        image:user.image
-                    })
+                try {
+                    await connectDB()
+                    let dbUser = await User.findOne({email:user.email})
+                    if (!dbUser) {
+                        dbUser = await User.create({
+                            name:user.name,
+                            email:user.email,
+                            image:user.image
+                        })
+                    }
+                    user.id = dbUser._id.toString()
+                    user.role = dbUser.role
+                } catch (error) {
+                    console.log("google signIn failed", error)
+                    throw error
                 }
-                user.id = dbUser._id.toString()
-                user.role = dbUser.role
             }
             return true
         },
